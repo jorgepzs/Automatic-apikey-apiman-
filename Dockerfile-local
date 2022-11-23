@@ -1,0 +1,101 @@
+FROM node:16.2.0-alpine3.11 AS BUILD_IMAGE
+USER root
+WORKDIR /usr/src/app
+COPY .npmrc .npmrc
+#COPY package*.json ./
+COPY . .
+RUN npm install
+RUN npm run build && npm prune --production
+FROM node:16.2.0-alpine3.11
+USER root
+RUN apk --no-cache add libaio libnsl libc6-compat curl && \
+  cd /tmp && \
+  curl -o instantclient-basiclite.zip https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linuxx64.zip -kSL && \
+  unzip instantclient-basiclite.zip && \
+  mv instantclient*/ /usr/lib/instantclient && \
+  rm instantclient-basiclite.zip && \
+  ln -s /usr/lib/instantclient/libclntsh.so.19.1 /usr/lib/libclntsh.so && \
+  ln -s /usr/lib/instantclient/libocci.so.19.1 /usr/lib/libocci.so && \
+  ln -s /usr/lib/instantclient/libociicus.so /usr/lib/libociicus.so && \
+  ln -s /usr/lib/instantclient/libnnz19.so /usr/lib/libnnz19.so && \
+  ln -s /usr/lib/libnsl.so.2 /usr/lib/libnsl.so.1 && \
+  ln -s /lib/libc.so.6 /usr/lib/libresolv.so.2 && \
+  ln -s /lib64/ld-linux-x86-64.so.2 /usr/lib/ld-linux-x86-64.so.2 && \
+  cd /usr/lib/instantclient && \
+  rm -f *jdbc* *occi* *mysql* *jar uidrvci genezi adrci libipc1.so libmql1.so
+ENV ORACLE_BASE /usr/lib/instantclient
+ENV LD_LIBRARY_PATH /usr/lib/instantclient
+ENV TNS_ADMIN /usr/lib/instantclient
+ENV ORACLE_HOME /usr/lib/instantclient
+
+ENV SECURITY_KEY='7C8DACFB853BC3862F5646A14B7123D6'
+ENV API_GRUPO_CREDENCIADO_ENDPOINT='http://host.docker.internal:3002/grupo-credenciado'
+ENV OP_ACCREDITED_GROUP_API_SEARCH_ENDPOINT='/pesquisarGrupoCredenciado'
+ENV OP_ACCREDITED_API_SEARCH_ENDPOINT='/listar-credenciados'
+ENV API_GRUPO_USUARIO_ENDPOINT='http://host.docker.internal:3006/grupo-usuario'
+ENV KEYCLOAK_URL='http://keycloak.dev.ocp.fleetcor.com.br/auth'
+ENV KEYCLOAK_REALM='credenciados'
+ENV KEYCLOAK_CREDENTIALS_SECRET='8e78b3a5-26bd-48c6-8c6d-ce54b4cbef0d'
+ENV OP_RESOURCE_API_GET_ACCREDITED_GROUP_RESOURCE_ENDPOINT='/pesquisarGrupoCredenciadoRecurso'
+ENV OP_USER_API_DECRYPT_KEY_ENDPOINT='/decrypt-key'
+ENV OP_ACCREDITED_GROUP_API_GET_BY_USE_REASON_ENDPOINT='/razao-uso'
+ENV OP_USER_API_CHANGE_PASSWORD_KEY_ENDPOINT='/change-password-with-key'
+ENV OP_ACCREDITED_API_ENABLE_ENDPOINT='/habilitar-credenciados'
+ENV OP_ACCREDITED_API_GET_BY_USE_REASON_ENDPOINT='/razao-uso'
+ENV OP_USER_API_CHANGE_PASSWORD_ENDPOINT='/change-password'
+ENV JWT_KEYCLOAK_SECRET_KEY='7HTOX7j_QMXR3OjtdUo6yZynp7VLxyS87BQZi87QBYg'
+ENV OP_TRANSFER_API_SEARCH_DETAIL_CONSOLIDATED_ENDPOINT='/extrato-repasse-consolidado'
+ENV DATABASE_CRYPTO_IV='07e044a62c4d1f39804f155a7ac84446'
+ENV OP_TRANSACTION_API_SEARCH_ENDPOINT='/listar-transacoes'
+ENV OP_LISTAR_GRUPO_CREDENCIADOS_POR_RAZAO_USO_ENDPOINT='/razao-uso'
+ENV API_CREDENCIADO_ENDPOINT='http://host.docker.internal:3003'
+ENV KEYCLOAK_GRANT_TYPE='client_credentials'
+ENV RESOURCE_API_ENDPOINT='http://host.docker.internal:3001/recurso'
+ENV DB_USER='APL_OPENSHIFT'
+ENV OP_ENVIAR_EMAIL_ENDPOINT='/EnviaEmailPS'
+ENV OP_TRANSFER_API_SEARCH_DETAIL_DAILY_ENDPOINT='/extrato-repasse-diario'
+ENV OP_RESOURCE_API_ENDPOINT='/consultarRecursoById'
+ENV OP_USER_API_RESET_PASSWORD_ENDPOINT='/reset-password'
+ENV USER_GROUP_API_ENDPOINT='http://host.docker.internal:3006/grupo-usuario'
+ENV TRANSFER_API_ENDPOINT='http://host.docker.internal:3004/repasse'
+ENV USER_API_ENDPOINT='http://host.docker.internal:3005/usuario'
+ENV KEYCLOAK_JWKS_URI='http://keycloak.dev.ocp.fleetcor.com.br/auth/realms/credenciados'
+ENV API_RECURSO_ENDPOINT='http://host.docker.internal:3001'
+ENV OP_USER_API_ENDPOINT='/change-roles'
+ENV OP_TRANSACTION_API_SEARCH_DETAIL_ENDPOINT='/extrato-transacao'
+ENV OP_TRANSFER_API_SEARCH_ENDPOINT='/listar-repasses'
+ENV OP_LISTAR_CREDENCIADOS_POR_IDS_ENDPOINT='/credenciado/listar-credenciados-por-ids'
+ENV OP_PESQUISAR_GRUPO_CREDENCIADO_RECURSO_ENDPOINT='/recurso/pesquisarGrupoCredenciadoRecurso'
+ENV OP_RESOURCE_API_GET_BY_ID_ENDPOINT='/consultarRecursoById'
+ENV DB_URL_NODE='ORADB_CGMP6A1:1521/CGMP6A1'
+ENV OP_LISTAR_GRUPO_GRUPO_USUARIOS_POR_RECURSO_ENDPOINT='/findGroupUserByIdResource'
+ENV OP_LISTAR_CREDENCIADOS_POR_ID_CREDENCIADO_ENDPOINT='/credenciado/listar-credenciados/id-credenciado?credenciados='
+ENV OP_RESOURCE_API_SEARCH_ENDPOINT='/pesquisarRecurso'
+ENV HTTP_REQUEST_MAX_REDIRECTS='5'
+ENV OP_USER_API_FORGOT_PASSWORD_ENDPOINT='/forgot-password'
+ENV HOST_CREDENCIADOS_EMAIL='http://host.docker.internal:3007/email'
+ENV OP_ACCREDITED_API_SEARCH_TO_ENABLE_ENDPOINT='/listar-credenciados-para-habilitar'
+ENV OP_ACCREDITED_API_SEARCH_BY_IDS_ENDPOINT='/listar-credenciados-por-ids'
+ENV OP_ACCREDITED_GROUP_API_SEARCH_BY_IDS_ENDPOINT='/pesquisarGruposCredenciadosPorIds'
+ENV HTTP_REQUEST_TIMEOUT='100000000'
+ENV OP_LISTAR_GRUPO_CREDENCIADOS_POR_IDS_ENDPOINT='/pesquisarGruposCredenciadosPorIds'
+ENV TRANSACTION_API_ENDPOINT='http://host.docker.internal:3004/transacao'
+ENV KEYCLOAK_RESOURCE='credenciados-gateway'
+ENV EMAIL_API_ENDPOINT='http://host.docker.internal:3007/email'
+ENV API_EMAIL_ENDPOINT='http://osb01npa.semparar.com.br'
+ENV OP_LISTAR_CREDENCIADOS_POR_RAZAO_USO_ENDPOINT='/credenciado/razao-uso'
+ENV ACCREDITED_GROUP_API_ENDPOINT='http://host.docker.internal:3002/grupo-credenciado'
+ENV DATABASE_CRYPTO_CONTENT='2d1043658a0f6d2a5aa4edfa20b4f80bbd'
+ENV ACCREDITED_API_ENDPOINT='http://host.docker.internal:3003/credenciado'
+ENV JWT_KEYCLOAK_PUBLIC_KEY='MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2nrZkgpHf9XQ9//51DOFSIKOjwEoykloaVeMXJf5vAji0u3CSpeVzmEongTEOL6P7zhPrjv5xwJwq05lQ/qz6nlZDZSjaY0UL4cIg504hTq6uQifj26pW5BXhzVoiY7t+JqN9tn/IGLJfvOnpeXHb9EimdDhYuwOFyNGW+0hzv8L5R3y/Z5nLTjxd6WvZp4/gXQ6MxrFdJCYfbBsRZI9s5JPfxlQUWg61bAdhJxAxKHS8z6loE5PII4QaGaSB7lLwgcwlditTMDg0lt31KqfI73Swq6TsYVzeuuDs7Xb277yDOnYhuNNrYFIYS3zZ51EWX7tYdFfdC/1ZgyWc/BoWQIDAQAB'
+ENV OP_LISTAR_CREDENCIADOS_GRUPO_POR_ID_CONVENIADO_ENDPOINT='/listar-conveniado-grupo/id-conveniado?conveniados='
+ENV OP_TRANSFER_API_SEARCH_CONSOLIDATED_LAUNCH_ENDPOINT='/extrato-repasse-consolidado-lancamento'
+ENV OP_USER_API_GET_ROLES_ENDPOINT='/roles'
+
+ENV OP_RESOURCE_API_SEARCH_RESOURCE_TOKEN_ENDPOINT='/consultarResourceToken'
+
+# copy from build image
+COPY --from=BUILD_IMAGE /usr/src/app/dist ./dist
+COPY --from=BUILD_IMAGE /usr/src/app/node_modules ./node_modules
+EXPOSE 8080
+CMD ["node", "dist/main"]
